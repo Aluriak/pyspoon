@@ -46,12 +46,13 @@ def make_app(app, *callbacks_list:{str: callable} or callable, route:str='/') ->
                 return Response(response=json.dumps({"fulfillmentMessages": []}), mimetype='application/json', status=202)
             data = callback(intent, query=request.json['queryResult'])
             if isinstance(data, (list, tuple)):
-                data = list(data)
+                data = {"fulfillmentMessages": list(data)}
             elif isinstance(data, dict) and 'payload' in data:
-                data = [data]
+                data = {"fulfillmentMessages": [data]}
+            elif isinstance(data, dict) and 'fulfillmentMessages' in data:
+                pass  # data is already properly set
             else:
                 raise TypeError(f"Unhandled return value of type {type(data)} for Spoon callback: {repr(data)}")
-            data = {"fulfillmentMessages": data}
             print('DATA:', data)
             return Response(response=json.dumps(data), mimetype='application/json', status=202)
         respond.__name__ = 'generated_response_func__' + str(uuid.uuid4().hex)
